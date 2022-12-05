@@ -1,27 +1,45 @@
-def is_subset(start1: int, end1: int, start2: int, end2: int) -> bool:
-    if (start1 <= start2 and end1 >= end2) or (start1 >= start2 and end1 <= end2):
-        return True
-    return False
+class Pair:
+    def __init__(self, input_str: str):
+        self._input_str = input_str
+        self._create_elves()
 
+    def _create_elves(self) -> None:
+        elves_inputs = self._input_str.split(',')
+        self.elf1 = self.Elf(elves_inputs[0])
+        self.elf2 = self.Elf(elves_inputs[1])
 
-def is_overlap(start1: int, end1: int, start2: int, end2: int) -> bool:
-    elf1 = set(range(start1, end1+1))
-    elf2 = set(range(start2, end2+1))
-    return bool(elf1 & elf2)
+    class Elf:
+        def __init__(self, input_str: str):
+            self._input_str = input_str
+
+        @property
+        def set(self):
+            start, end = self._input_str.split('-')
+            return set(range(int(start), int(end) + 1))
+
+    @property
+    def is_subset(self) -> bool:
+        return self.elf1.set.issubset(self.elf2.set) or self.elf2.set.issubset(self.elf1.set)
+
+    @property
+    def is_overlap(self) -> bool:
+        return bool(self.elf1.set & self.elf2.set)
 
 
 def main() -> None:
     with open('input.txt') as f:
         input_data = f.read()
     input_data = input_data.strip().split('\n')
-    input_data = [x.replace('-', ',').split(',') for x in input_data]
-    input_data = [[int(x) for x in pair] for pair in input_data]
 
-    is_subsets = [is_subset(*pair) for pair in input_data]
-    print(sum(is_subsets))
+    pairs = [Pair(i) for i in input_data]
 
-    is_overlaps = [is_overlap(*pair) for pair in input_data]
-    print(sum(is_overlaps))
+    # part one
+    is_subsets = [pair.is_subset for pair in pairs]
+    print('Part one:', sum(is_subsets))
+
+    # part two
+    is_overlap = [pair.is_overlap for pair in pairs]
+    print('Part two:', sum(is_overlap))
 
 
 if __name__ == '__main__':
