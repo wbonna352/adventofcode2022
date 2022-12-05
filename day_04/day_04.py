@@ -19,7 +19,9 @@ class Pair:
 
     @property
     def is_subset(self) -> bool:
-        return self.elf1.set.issubset(self.elf2.set) or self.elf2.set.issubset(self.elf1.set)
+        set1 = self.elf1.set
+        set2 = self.elf2.set
+        return set1.issubset(set2) or set2.issubset(set1)
 
     @property
     def is_overlap(self) -> bool:
