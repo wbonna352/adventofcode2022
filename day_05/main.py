@@ -20,12 +20,21 @@ class Stacks:
                 if crate != ' ':
                     self.starting_stacks[name].append(crate)
 
-    def execute_procedure(self, procedure: str) -> None:
+    def execute_procedure9000(self, procedure: str) -> None:
         pattern = r'move (\d+) from (\d+) to (\d+)'
         result = re.search(pattern, procedure)
         n, stacks_from, stacks_to = result.groups()
         for move in range(int(n)):
             self.stacks[stacks_to].append(self.stacks[stacks_from].pop())
+
+    def execute_procedure9001(self, procedure: str) -> None:
+        pattern = r'move (\d+) from (\d+) to (\d+)'
+        result = re.search(pattern, procedure)
+        n, stacks_from, stacks_to = result.groups()
+        n = int(n)
+        crates = self.stacks[stacks_from][-n:]
+        del self.stacks[stacks_from][-n:]
+        self.stacks[stacks_to].extend(crates)
 
     def print_output(self) -> None:
         print(''.join([self.stacks[stack][-1] for stack in self.stacks_names]))
@@ -38,12 +47,15 @@ def main() -> None:
     starting_stacks, procedures = input_data.split('\n\n')
 
     procedures = [p for p in procedures.strip().split('\n')]
-    stacks = Stacks(starting_stacks)
+    stacks9000 = Stacks(starting_stacks)
+    stacks9001 = Stacks(starting_stacks)
 
     for procedure in procedures:
-        stacks.execute_procedure(procedure)
+        stacks9000.execute_procedure9000(procedure)
+        stacks9001.execute_procedure9001(procedure)
 
-    stacks.print_output()
+    stacks9000.print_output()
+    stacks9001.print_output()
 
 
 if __name__ == '__main__':
