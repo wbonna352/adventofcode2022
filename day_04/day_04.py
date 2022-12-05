@@ -13,7 +13,7 @@ class Pair:
             self._input_str = input_str
 
         @property
-        def set(self):
+        def set(self) -> set:
             start, end = self._input_str.split('-')
             return set(range(int(start), int(end) + 1))
 
