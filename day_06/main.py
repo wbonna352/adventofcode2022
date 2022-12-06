@@ -1,8 +1,7 @@
 def index_after_n_unique_chars(n: int, input_str: str) -> int:
-    i = n
-    while len(set(input_str[i-n:i])) < n:
-        i += 1
-    return i
+    for i in range(n, len(input_str)-n):
+        if len(set(input_str[i-n:i])) == n:
+            return i
 
 
 def main() -> None:
