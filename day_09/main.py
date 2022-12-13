@@ -1,15 +1,26 @@
+from enum import Enum
+import numpy as np
 import pandas as pd
-
-
 from dataclasses import dataclass
 from copy import deepcopy
-from typing import List
+from typing import List, Union
+
+
+class Direction(Enum):
+    UP = 'U'
+    DOWN = 'D'
+    LEFT = 'L'
+    RIGHT = 'R'
 
 
 @dataclass
 class Motion:
-    direction: str
+    direction: Union[Direction, str]
     steps: int
+
+    def __post_init__(self):
+        if isinstance(self.direction, str):
+            self.direction = Direction(self.direction)
 
 
 @dataclass
@@ -18,27 +29,35 @@ class Position:
     y: int = 0
 
 
-@dataclass
 class Iteration:
-    H: Position
-    T: Position
+    def __init__(self, knots_number: int):
+        self.knots_number = knots_number
+        self.knots: List[Position] = [Position() for _ in range(knots_number)]
+
+    @property
+    def H(self) -> Position:
+        return self.knots[0]
+
+    @property
+    def T(self) -> Position:
+        return self.knots[-1]
 
 
 class Simulation:
-    def __init__(self):
-        self.iterations: List[Iteration] = [Iteration(H=Position(), T=Position())]
+    def __init__(self, knots_number: int):
+        self.knots_number = knots_number
+        self.iterations: List[Iteration] = [Iteration(knots_number)]
 
     @property
-    def current_H(self) -> Position:
-        return self.iterations[-1].H
-
-    @property
-    def current_T(self) -> Position:
-        return self.iterations[-1].T
+    def last_iteration(self) -> Iteration:
+        return self.iterations[-1]
 
     def execute_motion(self, motion: Motion) -> None:
         for step in range(motion.steps):
-            new_iter = execute_step(self.current_H, self.current_T, motion.direction)
+            new_iter = deepcopy(self.last_iteration)
+            Moves.head_move(new_iter.knots[0], motion.direction)
+            for i in range(1, self.knots_number):
+                Moves.tail_move(new_iter.knots[i - 1], new_iter.knots[i])
             self.iterations.append(new_iter)
 
     def execute_motions(self, motions: List[Motion]) -> None:
@@ -52,125 +71,53 @@ class Simulation:
         return df
 
 
-def execute_step(H: Position, T: Position, direction: str) -> Iteration:
+class Moves:
 
-    H = deepcopy(H)
-    T = deepcopy(T)
+    @staticmethod
+    def head_move(H: Position, direction: Direction) -> None:
+        if direction == Direction.UP:
+            H.y += 1
+        elif direction == Direction.DOWN:
+            H.y -= 1
+        elif direction == Direction.LEFT:
+            H.x -= 1
+        elif direction == Direction.RIGHT:
+            H.x += 1
 
-    def go_up() -> None:
-        if H.y > T.y:
-            if H.x > T.x:
-                T.x = H.x
-                T.y += 1
-            elif H.x < T.x:
-                T.x = H.x
-                T.y += 1
+    @staticmethod
+    def tail_move(H: Position, T: Position) -> None:
+        x_diff = T.x - H.x
+        y_diff = T.y - H.y
+
+        if x_diff > 1:
+            if y_diff > 1:
+                T.x = H.x + 1
+                T.y = H.y + 1
+            elif y_diff < -1:
+                T.x = H.x + 1
+                T.y = H.y - 1
             else:
-                T.y += 1
-        elif H.y < T.y:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                pass
+                T.x = H.x + 1
+                T.y = H.y
+        elif x_diff < -1:
+            if y_diff > 1:
+                T.x = H.x - 1
+                T.y = H.y + 1
+            elif y_diff < -1:
+                T.x = H.x - 1
+                T.y = H.y - 1
             else:
-                pass
+                T.x = H.x - 1
+                T.y = H.y
         else:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                pass
-            else:
-                pass
-        H.y += 1
-
-    def go_down() -> None:
-        if H.y > T.y:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                pass
-            else:
-                pass
-        elif H.y < T.y:
-            if H.x > T.x:
+            if y_diff > 1:
                 T.x = H.x
-                T.y -= 1
-            elif H.x < T.x:
+                T.y = H.y + 1
+            elif y_diff < -1:
                 T.x = H.x
-                T.y -= 1
-            else:
-                T.y -= 1
-        else:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                pass
+                T.y = H.y - 1
             else:
                 pass
-        H.y -= 1
-
-    def go_left() -> None:
-        if H.y > T.y:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                T.x -= 1
-                T.y = H.y
-            else:
-                pass
-        elif H.y < T.y:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                T.x -= 1
-                T.y = H.y
-            else:
-                pass
-        else:
-            if H.x > T.x:
-                pass
-            elif H.x < T.x:
-                T.x -= 1
-            else:
-                pass
-        H.x -= 1
-
-    def go_right() -> None:
-        if H.y > T.y:
-            if H.x > T.x:
-                T.x += 1
-                T.y = H.y
-            if H.x < T.x:
-                pass
-            if H.x == T.x:
-                pass
-        if H.y < T.y:
-            if H.x > T.x:
-                T.x += 1
-                T.y = H.y
-            if H.x < T.x:
-                pass
-            if H.x == T.x:
-                pass
-        if H.y == T.y:
-            if H.x > T.x:
-                T.x += 1
-            if H.x < T.x:
-                pass
-            if H.x == T.x:
-                pass
-        H.x += 1
-
-    functions = {
-        'U': go_up,
-        'D': go_down,
-        'L': go_left,
-        'R': go_right
-    }
-
-    functions[direction]()
-
-    return Iteration(H, T)
 
 
 def read_input_row(row: str) -> Motion:
@@ -183,10 +130,18 @@ def main() -> None:
         input_data = f.read().strip().split('\n')
     motions: List[Motion] = [read_input_row(row) for row in input_data]
 
-    simulation = Simulation()
-    simulation.execute_motions(motions)
+    def part_one() -> int:
+        simulation = Simulation(knots_number=2)
+        simulation.execute_motions(motions)
+        return len(simulation.tail_positions.drop_duplicates())
 
-    print(len(simulation.tail_positions.drop_duplicates()))
+    def part_two() -> int:
+        simulation = Simulation(knots_number=10)
+        simulation.execute_motions(motions)
+        return len(simulation.tail_positions.drop_duplicates())
+
+    print(f'Part one: {part_one()}')
+    print(f'Part two: {part_two()}')
 
 
 if __name__ == '__main__':
